@@ -37,11 +37,15 @@ client = OpenAI(api_key=openai_api_key)
 
 supabase_client = supabase.create_client(supabase_url, supabase_key)
 
+
 class EmployeeSuggestedCourse(BaseModel):
     employee_id: str
     course_id: str
-    suggested_at: Optional[datetime] = None  # Timestamp of when the course was suggested
+    # Timestamp of when the course was suggested
+    suggested_at: Optional[datetime] = None
 # Define the Employee model
+
+
 class Employee(BaseModel):
     user_id: str
     full_name: str
@@ -51,6 +55,8 @@ class Employee(BaseModel):
     hobbies: str
 
 # Define the Task model
+
+
 class Task(BaseModel):
     task_id: Optional[str] = None
     user_id: str
@@ -101,6 +107,8 @@ class Task(BaseModel):
             due_by=cls.calculate_due_date(difficulty),
             created_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         )
+
+
 class Course(BaseModel):
     title: str
     provider: str
@@ -109,27 +117,27 @@ class Course(BaseModel):
     id: str  # assuming uuid is stored as a string
 
 # Fetch courses from Supabase
+
+
 def fetch_courses_from_supabase() -> List[Course]:
     try:
         # Fetch courses data from the 'courses' table
         response = supabase_client.table("courses").select("*").execute()
-        
-        # Check for errors in the response
-        if response.error:
-            raise Exception(f"Error fetching courses: {response.error.message}")
-        
-        courses_data = response.data
 
-        # Map Supabase data to Course model directly
+        # Handle possible errors by checking if 'data' is None
+        if not response.data:
+            raise Exception("No data found or error in fetching courses.")
+
+        # Map Supabase data to Course model
         courses = [
             Course(
-                title=course["Title"],
+                title=course["Title"],  # Ensure matching column names
                 provider=course["Provider"],
                 upcoming_date=course.get("Upcoming Date", "NA"),
                 course_fee=course.get("Course Fee", "Not Provided"),
-                id=course["id"]  # Assigning course id
+                id=course["id"]  # UUID primary key
             )
-            for course in courses_data
+            for course in response.data
         ]
         return courses
 
@@ -137,8 +145,13 @@ def fetch_courses_from_supabase() -> List[Course]:
         raise HTTPException(
             status_code=500, detail=f"Error fetching courses from Supabase: {str(e)}"
         )
+
+
 # Use OpenAI to generate suggested courses
-def generate_suggested_courses_with_openai(employee: Employee, courses: List[Course]) -> List[Course]:
+
+
+# Example of calling OpenAI to generate suggested courses
+def generate_suggested_courses_with_openai(employee: Employee, courses: List[Course]) -> List[dict]:
     course_list_str = "\n".join(
         [f"- {course.title} by {course.provider}, Fee: {course.course_fee}, Date: {course.upcoming_date or 'NA'}"
          for course in courses]
@@ -178,45 +191,56 @@ def generate_suggested_courses_with_openai(employee: Employee, courses: List[Cou
         raw_response = response.choices[0].message.content.strip()
         print(f"OpenAI Response: {raw_response}")  # Debugging step
 
-        # Use regex to extract the JSON portion from the response
+        # Extract and parse the JSON response
         json_match = re.search(r"\[.*\]", raw_response, re.DOTALL)
-
         if not json_match:
             raise ValueError("JSON data not found in the response")
 
-        # Parse the extracted JSON portion
-        json_data = json.loads(json_match.group())
-        return json_data
+        return json.loads(json_match.group())
 
     except (json.JSONDecodeError, ValueError) as e:
-        print(f"Error parsing JSON from OpenAI: {e}")  # Debug print for errors
+        print(f"Error parsing JSON from OpenAI: {e}")
         raise HTTPException(
             status_code=500, detail=f"Error parsing JSON from OpenAI: {str(e)}"
         )
     except Exception as e:
-        print(f"General error: {e}")  # Debug print for general errors
+        print(f"General error: {e}")
         raise HTTPException(
             status_code=500, detail=f"Error generating suggestions with OpenAI: {str(e)}"
         )
 
+
 # Insert the suggested courses into the employee_suggested_courses relational table
+
+
 def insert_suggested_courses(employee_id: str, course_ids: List[str]):
     try:
-        # Prepare the data for bulk insertion
-        records = [{"employee_id": employee_id, "course_id": course_id} for course_id in course_ids]
+        # Prepare the JSONB structure for suggested courses
+        record = {
+            "user_id": employee_id,
+            "suggested_courses": json.dumps(course_ids),  # Store as JSONB
+            "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
 
-        response = supabase_client.table("employee_suggested_courses").insert(records).execute()
+        # Use upsert to insert or update if the record already exists
+        response = supabase_client.table("employee_suggested_courses").upsert(record, on_conflict=["user_id"]).execute()
 
-        if response.error:
-            print(f"Error inserting suggested courses for employee {employee_id}: {response.error}")
-        else:
-            print(f"Suggested courses inserted for employee {employee_id}")
-    
+        # Check if the insertion or update failed by inspecting the response
+        if not response.data:
+            raise Exception(f"Insertion or update failed: {response}")
+
+        print(f"Suggested courses inserted/updated for employee {employee_id}")
+
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error inserting suggested courses into relational table: {str(e)}"
+            status_code=500, detail=f"Error inserting or updating suggested courses: {str(e)}"
         )
-    
+
+
+
+# Endpoint to generate and update suggested courses for all employees
+
+
 # Endpoint to generate and update suggested courses for all employees
 @app.post("/generate-suggested-courses")
 def generate_and_update_suggested_courses():
@@ -227,9 +251,13 @@ def generate_and_update_suggested_courses():
 
         # Loop through each employee and generate suggested courses
         for employee in employees:
-            suggested_courses = generate_suggested_courses_with_openai(employee, courses)
-            course_ids = [course["course_id"] for course in suggested_courses]  # Extract course IDs
-            insert_suggested_courses(employee.user_id, course_ids)  # Insert into relational table
+            suggested_courses = generate_suggested_courses_with_openai(
+                employee, courses)
+            course_ids = [course["course_id"]
+                          for course in suggested_courses]  # Extract course IDs
+
+            # Insert into the employee_suggested_courses table
+            insert_suggested_courses(employee.user_id, course_ids)
 
         return {"message": "Suggested courses generated and updated for all employees."}
     except Exception as e:
@@ -237,21 +265,20 @@ def generate_and_update_suggested_courses():
             status_code=500, detail=f"Error generating suggested courses: {str(e)}"
         )
 
+
 # Function to fetch employees from Supabase
+
+
+# Fetch employees from Supabase
 def fetch_employees_from_supabase() -> List[Employee]:
     try:
-        # Query to fetch all employees from the employees table
         response = supabase_client.table("employees").select("*").execute()
-
-        # Parse the data into Employee model instances
         employees_data = response.data
-        # Convert to Employee models
-        employees = [Employee(**emp) for emp in employees_data]
-        return employees
-
+        return [Employee(**emp) for emp in employees_data]
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error fetching employees from Supabase: {str(e)}")
+            status_code=500, detail=f"Error fetching employees from Supabase: {str(e)}"
+        )
 
 # Function to fetch an employee by user_id from Supabase
 
