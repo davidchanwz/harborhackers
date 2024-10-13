@@ -20,7 +20,7 @@ load_dotenv()
 # Add this code to your FastAPI app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173",
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "https://harborhackers.vercel.app",
                    "https://harborhackers.onrender.com"],  # Adjust to your frontend's URL
     allow_credentials=True,
     allow_methods=["*"],
