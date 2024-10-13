@@ -3,19 +3,19 @@ import { Box, Text, Badge, Stack } from '@chakra-ui/react';
 
 const CourseCard = ({ course }) => {
   // Use optional chaining to avoid crashing if fields are missing
-  const { title, provider, fee, date } = course || {};
+  const { Title, Provider, "Upcoming Date": date, "Course Fee": fee } = course || {};
 
   return (
     <Box p={4} borderWidth="1px" borderRadius="lg" mb={4} bg="white">
       <Stack spacing={3}>
         {/* Title */}
         <Text fontSize="lg" fontWeight="bold">
-          {title || 'No Title Provided'}
+          {Title || 'No Title Provided'}
         </Text>
 
         {/* Provider */}
         <Text fontSize="md" color="gray.500">
-          Provider: {provider || 'Unknown Provider'}
+          Provider: {Provider || 'Unknown Provider'}
         </Text>
 
         {/* Fee */}
