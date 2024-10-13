@@ -9,7 +9,7 @@ import DockWorks from './pages/DockWorks';
 import Settings from './pages/Settings';
 import User from './pages/User';
 import Metrics from './pages/Metrics';
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
@@ -26,7 +26,6 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/user" element={<User />} />
             <Route path="/metrics" element={<Metrics />} />
-
           </Routes>
         </Sidebar>
       </AuthProvider>

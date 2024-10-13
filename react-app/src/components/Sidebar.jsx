@@ -39,6 +39,7 @@ import Login from '../pages/Login';
 import { useAuth } from '../context/AuthContext'; // Import your AuthContext
 import { useNavigate } from 'react-router-dom'; // To handle navigation
 
+
 // Sidebar link items
 const LinkItems = [
     { name: 'Home', icon: FiHome, path: '/' },
