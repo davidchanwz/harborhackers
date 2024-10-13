@@ -9,6 +9,14 @@
 - [Tech Stack](#tech-stack)
 - [Members](#members)
 
+## Instructions
+1. Go to https://harborhackers.vercel.app
+2. Go to Login tab
+3. Login in with 
+    email: guest@account.com
+    password: 1234
+
+
 ## Overview ⚓️
 <img width="1706" alt="Screenshot 2024-10-13 at 10 19 58 PM" src="https://github.com/user-attachments/assets/b1038943-ff59-4300-bf73-ecc10cff6d56">
 CrewMate is an application that leverages on the power of AI to integrate learning, engagement, and communication into one comprehensive platform,
