@@ -6,12 +6,14 @@ import { useSpring, animated } from '@react-spring/web'; // Import for animation
 import { useAuth } from '../context/AuthContext'; // Import the AuthContext to get the logged-in user
 import axios from 'axios';
 
-const TaskList = ({setUserPoints}) => {
+const TaskList = ({ setUserPoints }) => {
     const [tasks, setTasks] = useState([]);
     const [totalPoints, setTotalPoints] = useState(0);
     const { user, loading } = useAuth(); // Get the logged-in user from the AuthContext
     const [isLoading, setIsLoading] = useState(false);  // Track loading state for button
     const [showAlert, setShowAlert] = useState(false);  // Track if the alert should be shown
+    const [showWarning, setShowWarning] = useState(false);  // Track if the alert should be shown
+
     // Animation state for total points
     const props = useSpring({ number: totalPoints, from: { number: 0 } });
 
@@ -134,6 +136,11 @@ const TaskList = ({setUserPoints}) => {
                 setShowAlert(false);
             }, 3000);  // Adjust the duration as needed (3000 ms = 3 seconds
         } catch (error) {
+            setShowWarning(true);  // Show the success alert
+            // Set a timeout to hide the alert after 3 seconds
+            setTimeout(() => {
+                setShowWarning(false);
+            }, 3000);  // Adjust the duration as needed (3000 ms = 3 seconds
             console.error('Error generating random task:', error);
         } finally {
             setIsLoading(false);  // Set loading to false once the request completes
@@ -159,22 +166,7 @@ const TaskList = ({setUserPoints}) => {
             </Box>
         );
     }
-    // if (!user) {
-    //     // Display a warning alert if the user is not logged in
-    //     return (
-    //         <Box p={8}>
-    //             <Alert status="warning">
-    //                 <AlertIcon />
-    //                 <Box flex="1">
-    //                     <AlertTitle>Login Required</AlertTitle>
-    //                     <AlertDescription>
-    //                         You need to log in to view your tasks.
-    //                     </AlertDescription>
-    //                 </Box>
-    //             </Alert>
-    //         </Box>
-    //     );
-    // }
+
     return (
         <Box p={8}>
             {/* Display alert after task generation */}
@@ -182,6 +174,13 @@ const TaskList = ({setUserPoints}) => {
                 <Alert status="success" mb={4}>
                     <AlertIcon />
                     Task successfully generated!
+                </Alert>
+            )}
+            {/* Display alert after task generation */}
+            {showWarning && (
+                <Alert status="error" mb={4}>
+                    <AlertIcon />
+                    Sorry! There was a problem with our server. Please try again.
                 </Alert>
             )}
 
