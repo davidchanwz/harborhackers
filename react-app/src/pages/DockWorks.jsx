@@ -2,6 +2,7 @@
 import React from 'react';
 import TaskList from '../components/TaskList'; 
 import MilestoneTracker from '../components/MilestoneTracker';
+import TaskReward from '../components/TaskReward'
 import { Box, Heading, Text, Alert, AlertIcon,AlertTitle,AlertDescription } from '@chakra-ui/react';
 import { useAuth } from '../context/AuthContext';
 function DockWorks({setUserPoints}) {
@@ -24,8 +25,8 @@ function DockWorks({setUserPoints}) {
     }
     return (
         <Box p={8}>
-            <MilestoneTracker />
-            <TaskList setUserPoints={setUserPoints} />
+            <TaskReward />
+
         </Box>
     );
 }
