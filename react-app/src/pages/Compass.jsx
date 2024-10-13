@@ -24,7 +24,6 @@ function Compass() {
     }
     return (
         <Box p={8}>
-            <Heading>Compass</Heading>
             <CourseList />
 
         </Box>
