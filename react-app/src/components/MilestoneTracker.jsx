@@ -4,9 +4,8 @@ import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { CheckIcon, SmallCloseIcon } from '@chakra-ui/icons';
 
-const Milestones = () => {
+const Milestones = ( {userPoints}) => {
     const { user, loading } = useAuth(); // Get the logged-in user from the AuthContext
-    const [userPoints, setUserPoints] = useState(0);
 
     const milestones = [
         { threshold: 10, reward: '$10 GV Voucher' },
@@ -16,43 +15,43 @@ const Milestones = () => {
     ];
 
     // Fetch tasks for the logged-in user from Supabase
-    const fetchTasks = async () => {
-        if (!user) {
-            console.error('No user is logged in.');
-            return [];
-        }
+    // const fetchTasks = async () => {
+    //     if (!user) {
+    //         console.error('No user is logged in.');
+    //         return [];
+    //     }
 
-        const { data, error } = await supabase
-            .from('tasks')
-            .select('*')
-            .eq('user_id', user.id); // Filter tasks by the user's id
+    //     const { data, error } = await supabase
+    //         .from('tasks')
+    //         .select('*')
+    //         .eq('user_id', user.id); // Filter tasks by the user's id
 
-        if (error) {
-            console.error('Error fetching tasks:', error);
-            return [];
-        }
+    //     if (error) {
+    //         console.error('Error fetching tasks:', error);
+    //         return [];
+    //     }
 
-        return data;
-    };
+    //     return data;
+    // };
 
-    // Fetch tasks and calculate total points when the component mounts
-    useEffect(() => {
-        const getTasksAndCalculatePoints = async () => {
-            if (loading) return; // Wait for loading to finish before fetching tasks
+    // // Fetch tasks and calculate total points when the component mounts
+    // useEffect(() => {
+    //     const getTasksAndCalculatePoints = async () => {
+    //         if (loading) return; // Wait for loading to finish before fetching tasks
 
-            const fetchedTasks = await fetchTasks();
-            calculateTotalPoints(fetchedTasks);
-        };
+    //         const fetchedTasks = await fetchTasks();
+    //         calculateTotalPoints(fetchedTasks);
+    //     };
 
-        getTasksAndCalculatePoints();
-    }, [user, loading]);
+    //     getTasksAndCalculatePoints();
+    // }, [user, loading]);
 
-    const calculateTotalPoints = (taskList) => {
-        const total = taskList.reduce((acc, task) => {
-            return task.completed ? acc + task.points : acc;
-        }, 0);
-        setUserPoints(total);
-    };
+    // const calculateTotalPoints = (taskList) => {
+    //     const total = taskList.reduce((acc, task) => {
+    //         return task.completed ? acc + task.points : acc;
+    //     }, 0);
+    //     setUserPoints(total);
+    // };
 
     return (
         <Box
