@@ -57,6 +57,7 @@ export default function EmployeeForm() {
                     experience_level: experienceLevel,
                     skills: skills,
                     hobbies: hobbies,
+                    email: user.email
                 })
                 .eq('user_id', user.id)
 
@@ -77,6 +78,7 @@ export default function EmployeeForm() {
                         experience_level: experienceLevel,
                         skills: skills,
                         hobbies: hobbies,
+                        email: user.email
                     },
                 ])
 

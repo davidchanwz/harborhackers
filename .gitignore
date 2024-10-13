@@ -26,3 +26,5 @@ react-app/.env
 *.njsproj
 *.sln
 *.sw?
+__pycache__/
+port-bot/__pycache____pycache__/

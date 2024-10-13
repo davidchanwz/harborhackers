@@ -7,8 +7,8 @@ import Login from './pages/Login';
 import Compass from './pages/Compass';
 import DockWorks from './pages/DockWorks';
 import Settings from './pages/Settings';
-import Tasks from './pages/Tasks';
 import User from './pages/User';
+import Metrics from './pages/Metrics';
 import { AuthProvider } from './context/AuthContext'
 
 function App() {
@@ -25,7 +25,7 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/login" element={<Login />} />
             <Route path="/user" element={<User />} />
-            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/metrics" element={<Metrics />} />
 
           </Routes>
         </Sidebar>

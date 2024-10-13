@@ -38,7 +38,6 @@ import Settings from '../pages/Settings';
 import Login from '../pages/Login';
 import { useAuth } from '../context/AuthContext'; // Import your AuthContext
 import { useNavigate } from 'react-router-dom'; // To handle navigation
-import Tasks from '../pages/Tasks'; 
 
 // Sidebar link items
 const LinkItems = [
@@ -47,8 +46,6 @@ const LinkItems = [
     { name: 'Compass', icon: FiCompass, path: '/compass' },
     { name: 'DockWorks', icon: MdOutlineChecklist, path: '/dockworks' },
     { name: 'Settings', icon: FiSettings, path: '/settings' },
-    { name: 'Login/Signup', icon: FiSettings, path: '/login' },
-    { name: 'Tasks', icon: FiCheckSquare, path: '/tasks' },
 ];
 
 const Sidebar = ({ children }) => {
