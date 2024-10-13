@@ -42,6 +42,7 @@ import { useNavigate } from 'react-router-dom'; // To handle navigation
 import Metrics from '../pages/Metrics';
 import Milestones from '../pages/Milestones';
 
+
 // Sidebar link items
 const LinkItems = [
     { name: 'Home', icon: FiHome, path: '/' },

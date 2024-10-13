@@ -20,7 +20,8 @@ load_dotenv()
 # Add this code to your FastAPI app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # Adjust to your frontend's URL
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "https://harborhackers.vercel.app",
+                   "https://harborhackers.onrender.com"],  # Adjust to your frontend's URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,6 +38,8 @@ client = OpenAI(api_key=openai_api_key)
 supabase_client = supabase.create_client(supabase_url, supabase_key)
 
 # Define the Employee model
+
+
 class Employee(BaseModel):
     user_id: str
     full_name: str
@@ -46,11 +49,14 @@ class Employee(BaseModel):
     hobbies: str
 
 # Define the Task model
+
+
 class Task(BaseModel):
     task_id: Optional[str] = None
     user_id: str
     partner_id: Optional[str] = None
-    task_description: str  # Limit this in the input generation step (max 10 words)
+    # Limit this in the input generation step (max 10 words)
+    task_description: str
     task_type: str  # single_fun, pair_fun, single_work, pair_work
     difficulty: str  # easy, medium, hard
     points: int  # Points calculated based on difficulty
@@ -70,6 +76,7 @@ class Task(BaseModel):
         days_to_add = days_map.get(difficulty, 1)
         due_date = datetime.now() + timedelta(days=days_to_add)
         return due_date.strftime('%Y-%m-%d')
+
     @staticmethod
     def calculate_points(difficulty: str) -> int:
         """Calculate points based on difficulty level."""
@@ -84,7 +91,6 @@ class Task(BaseModel):
     def create_task(cls, user_id: str, partner_id: Optional[str], task_description: str, task_type: str, difficulty: str) -> 'Task':
         """Create a task with default values for points and due date."""
 
-        
         return cls(
             user_id=user_id,
             partner_id=partner_id,
@@ -102,27 +108,34 @@ def fetch_employees_from_supabase() -> List[Employee]:
     try:
         # Query to fetch all employees from the employees table
         response = supabase_client.table("employees").select("*").execute()
-        
+
         # Parse the data into Employee model instances
         employees_data = response.data
-        employees = [Employee(**emp) for emp in employees_data]  # Convert to Employee models
+        # Convert to Employee models
+        employees = [Employee(**emp) for emp in employees_data]
         return employees
-    
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching employees from Supabase: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching employees from Supabase: {str(e)}")
 
 # Function to fetch an employee by user_id from Supabase
+
+
 def fetch_employee_by_id(employee_id: str) -> Employee:
     try:
         # Query to fetch a specific employee from the employees table by user_id
-        response = supabase_client.table("employees").select("*").eq("user_id", employee_id).single().execute()  # Fetch a single row
+        response = supabase_client.table("employees").select(
+            "*").eq("user_id", employee_id).single().execute()  # Fetch a single row
 
         # Parse the data into an Employee model instance
         employee_data = response.data
         return Employee(**employee_data)  # Convert to Employee model
-    
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching employee from Supabase: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching employee from Supabase: {str(e)}")
+
 
 def get_fun_partner(employee: Employee, all_employees: List[Employee]) -> Optional[Employee]:
     """Use OpenAI to match a fun partner based on shared hobbies."""
@@ -134,11 +147,11 @@ def get_fun_partner(employee: Employee, all_employees: List[Employee]) -> Option
 
     The output should just be the employee full name with no extra text. Choose a match from the following employees:
     """
-    
+
     for emp in all_employees:
         if emp.user_id != employee.user_id:
             prompt += f"\n- {emp.full_name} (ID: {emp.user_id}), Hobbies: {', '.join(emp.hobbies)}"
-    
+
     prompt += "\n\nSelect the best match based on shared hobbies and return the partner's name."
 
     # Use the new OpenAI method to get the partner match
@@ -149,6 +162,7 @@ def get_fun_partner(employee: Employee, all_employees: List[Employee]) -> Option
         if emp.full_name == matched_name:
             return emp
     return None
+
 
 def get_work_partner(employee: Employee, all_employees: List[Employee]) -> Optional[Employee]:
     """Use OpenAI to match a work partner based on complementary skills."""
@@ -161,21 +175,22 @@ def get_work_partner(employee: Employee, all_employees: List[Employee]) -> Optio
 
     The output should only be the employee full name with no extra text. Choose a match from the following employees:
     """
-    
+
     for emp in all_employees:
         if emp.user_id != employee.user_id:
             prompt += f"\n- {emp.full_name} (ID: {emp.user_id}), Department: {emp.department}, Skills: {', '.join(emp.skills)}"
-    
+
     prompt += "\n\nSelect the best match based on complementary skills and return the partner's name."
 
     # Use the new OpenAI method to get the partner match
     matched_name = get_openai_partner_match(prompt)
-    
+
     # Match the partner's name with the employee data and return
     for emp in all_employees:
         if emp.full_name == matched_name:
             return emp
     return None
+
 
 def get_openai_partner_match(prompt: str) -> Optional[str]:
     """Helper function to use OpenAI for partner matching based on a provided prompt."""
@@ -189,9 +204,12 @@ def get_openai_partner_match(prompt: str) -> Optional[str]:
             max_tokens=10,  # Keep response concise
             temperature=0.5  # Adjust creativity for more consistent output
         )
-        return response.choices[0].message.content.strip()  # Extract the matched partner's name
+        # Extract the matched partner's name
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting partner match from OpenAI: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting partner match from OpenAI: {str(e)}")
+
 
 def get_employee_current_tasks(user_id: str) -> List[str]:
     """
@@ -204,7 +222,8 @@ def get_employee_current_tasks(user_id: str) -> List[str]:
             raise ValueError("Invalid user_id")
 
         # Query Supabase for tasks of the employee using the UUID only
-        response = supabase_client.table("tasks").select("task_description").eq("user_id", user_id).execute()
+        response = supabase_client.table("tasks").select(
+            "task_description").eq("user_id", user_id).execute()
 
         # Parse the response data into a list of task descriptions
         tasks_data = response.data
@@ -214,12 +233,15 @@ def get_employee_current_tasks(user_id: str) -> List[str]:
         return current_tasks
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching tasks from Supabase: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching tasks from Supabase: {str(e)}")
+
 
 def generate_task_with_openai(prompt: str, task_type: str, current_tasks: List[str]) -> dict:
     """Helper function to generate task description using OpenAI with a specified format."""
     # Format the list of current tasks into a string
-    formatted_current_tasks = "\n".join([f"- {task}" for task in current_tasks])
+    formatted_current_tasks = "\n".join(
+        [f"- {task}" for task in current_tasks])
     formatted_prompt = f"""
 You are an assistant generating tasks for employees working at Port Singapore Authority. Please follow this exact JSON structure for the output.
 
@@ -262,12 +284,16 @@ Generate a task of type {task_type}. {prompt}
 
     except json.JSONDecodeError as e:
         print(f"JSONDecodeError: {e}")  # Debug print for JSON errors
-        raise HTTPException(status_code=500, detail=f"Error parsing JSON from OpenAI: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error parsing JSON from OpenAI: {str(e)}")
     except Exception as e:
         print(f"General error: {e}")  # Debug print for general errors
-        raise HTTPException(status_code=500, detail=f"Error generating task from OpenAI: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generating task from OpenAI: {str(e)}")
 
 ### Task Generation Functions ###
+
+
 def generate_singular_fun_task(employee: Employee) -> Task:
     current_tasks = get_employee_current_tasks(employee.user_id)
     prompt = f"""
@@ -282,8 +308,9 @@ def generate_singular_fun_task(employee: Employee) -> Task:
     The task should be quick to complete and help forge a fun and lively work place environment.
     """
     task_desc = generate_task_with_openai(prompt, "single_fun", current_tasks)
-    
+
     return Task.create_task(**task_desc)
+
 
 def generate_pair_fun_task(employee: Employee, partner: Employee) -> Task:
     current_tasks = get_employee_current_tasks(employee.user_id)
@@ -295,7 +322,7 @@ def generate_pair_fun_task(employee: Employee, partner: Employee) -> Task:
     The task should involve both employees and foster teamwork and engagement. Leverage similiar hobbies if possible.
     """
     task_desc = generate_task_with_openai(prompt, "pair_fun", current_tasks)
-    
+
     return Task.create_task(**task_desc)
 
 # def generate_singular_work_task(employee: Employee) -> Task:
@@ -306,12 +333,13 @@ def generate_pair_fun_task(employee: Employee, partner: Employee) -> Task:
 #     - Department: {employee.department}
 #     - Experience Level: {employee.experience_level}
 #     - Skills: {', '.join(employee.skills)}
-    
+
 #     The task should be them taking up an upskilling course and be aligned with their current department and skills.
 #     """
 #     task_desc = generate_task_with_openai(prompt, "single_work")
-    
+
 #     return Task.create_task(**task_desc)
+
 
 def generate_pair_work_task(employee: Employee, partner: Employee) -> Task:
     current_tasks = get_employee_current_tasks(employee.user_id)
@@ -323,44 +351,48 @@ def generate_pair_work_task(employee: Employee, partner: Employee) -> Task:
     The task should require collaboration between both employees and leverage their skills. Should be able to be carried out within working hours.
     """
     task_desc = generate_task_with_openai(prompt, "pair_work", current_tasks)
-    
+
     return Task.create_task(**task_desc)
 
 ### Main Task Generation for All Employees ###
+
+
 @app.post("/generate-tasks-for-all")
 def generate_tasks_for_all():
     tasks = []
-    
+
     # Convert placeholder employee data to Employee objects
     employee_list = fetch_employees_from_supabase()
-    
+
     # Loop through each employee
     for employee in employee_list:
         # Generate a single fun task
         single_fun_task = generate_singular_fun_task(employee)
         save_task_to_supabase(single_fun_task)  # Save to Supabase
         tasks.append(single_fun_task)
-        
+
         # Generate a pair fun task
         partner_for_fun = get_fun_partner(employee, employee_list)
         if partner_for_fun:
             pair_fun_task = generate_pair_fun_task(employee, partner_for_fun)
             save_task_to_supabase(pair_fun_task)  # Save to Supabase
             tasks.append(pair_fun_task)
-        
+
         # Generate a single work task
         # single_work_task = generate_singular_work_task(employee)
         # save_task_to_supabase(single_work_task)  # Save to Supabase
         # tasks.append(single_work_task)
-        
+
         # Generate a pair work task
         partner_for_work = get_work_partner(employee, employee_list)
         if partner_for_work:
-            pair_work_task = generate_pair_work_task(employee, partner_for_work)
+            pair_work_task = generate_pair_work_task(
+                employee, partner_for_work)
             save_task_to_supabase(pair_work_task)  # Save to Supabase
             tasks.append(pair_work_task)
-    
+
     return {"generated_tasks": tasks}
+
 
 def save_task_to_supabase(task: Task) -> None:
     """
@@ -379,21 +411,24 @@ def save_task_to_supabase(task: Task) -> None:
         "completed_at": task.completed_at,
         "created_at": task.created_at
     }
-    
+
     try:
         response = supabase_client.table('tasks').insert(task_data).execute()
-        
+
         print(f"Task for user {task.user_id} saved successfully.")
-    
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error saving task to Supabase: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error saving task to Supabase: {str(e)}")
 
 ### Task Generation for Single Random Task ###
+
+
 @app.post("/generate-random-task/{employee_id}")
 def generate_random_task_for_employee(employee_id: str):
     # Fetch the employee from Supabase using employee_id
     employee = fetch_employee_by_id(employee_id)
-    
+
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
 
@@ -401,11 +436,13 @@ def generate_random_task_for_employee(employee_id: str):
     employee_list = fetch_employees_from_supabase()
 
     # Exclude the current employee from potential partners
-    potential_partners = [emp for emp in employee_list if emp.user_id != employee.user_id]
+    potential_partners = [
+        emp for emp in employee_list if emp.user_id != employee.user_id]
 
     # Ensure there are potential partners for pair tasks
     if not potential_partners:
-        raise HTTPException(status_code=400, detail="No available partners for pair tasks")
+        raise HTTPException(
+            status_code=400, detail="No available partners for pair tasks")
 
     # Randomly choose one of the task types
     task_type = random.choice(["singular_fun", "pair_fun", "pair_work"])
@@ -416,12 +453,14 @@ def generate_random_task_for_employee(employee_id: str):
     elif task_type == "pair_fun":
         partner_for_fun = get_fun_partner(employee, potential_partners)
         if not partner_for_fun:
-            raise HTTPException(status_code=400, detail="No suitable partner found for pair fun task")
+            raise HTTPException(
+                status_code=400, detail="No suitable partner found for pair fun task")
         task = generate_pair_fun_task(employee, partner_for_fun)
     else:  # "pair_work"
         partner_for_work = get_work_partner(employee, potential_partners)
         if not partner_for_work:
-            raise HTTPException(status_code=400, detail="No suitable partner found for pair work task")
+            raise HTTPException(
+                status_code=400, detail="No suitable partner found for pair work task")
         task = generate_pair_work_task(employee, partner_for_work)
 
     # Save the generated task to Supabase
