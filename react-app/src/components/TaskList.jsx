@@ -120,7 +120,8 @@ const TaskList = () => {
 
         try {
             const response = await axios.post(
-                `http://127.0.0.1:8000/generate-random-task/${user.id}`
+                // `http://127.0.0.1:8000/generate-random-task/${user.id}`
+                `https://harborhackers.onrender.com/generate-random-task/${user.id}`
             );
             console.log('Random task generated:', response.data);
             // Refetch tasks after generating a new one
