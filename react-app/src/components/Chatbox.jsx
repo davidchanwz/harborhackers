@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import '../App.css';
+import './Chatbox.css';
 import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 import {
     MainContainer,
@@ -117,9 +117,7 @@ function ChatbotPage() {
 
     return (
         <div className="chat-container">
-            <div className="header">
-                Port Authority Singapore Chatbot
-            </div>
+
             <MainContainer>
                 <ChatContainer>
                     <div className="assistant-name">
