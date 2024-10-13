@@ -3,10 +3,10 @@ import React from 'react';
 import { Box, Heading, Text } from '@chakra-ui/react';
 import TaskList from '../components/TaskList'; 
 
-function DockWorks() {
+function DockWorks({setUserPoints}) {
     return (
         <Box p={8}>
-            <TaskList />
+            <TaskList setUserPoints={setUserPoints} />
         </Box>
     );
 }

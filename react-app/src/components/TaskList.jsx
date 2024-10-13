@@ -6,7 +6,7 @@ import { useSpring, animated } from '@react-spring/web'; // Import for animation
 import { useAuth } from '../context/AuthContext'; // Import the AuthContext to get the logged-in user
 import axios from 'axios';
 
-const TaskList = () => {
+const TaskList = ({setUserPoints}) => {
     const [tasks, setTasks] = useState([]);
     const [totalPoints, setTotalPoints] = useState(0);
     const { user, loading } = useAuth(); // Get the logged-in user from the AuthContext
@@ -60,6 +60,7 @@ const TaskList = () => {
             return task.completed ? acc + task.points : acc;
         }, 0);
         setTotalPoints(total);
+        setUserPoints(total);
     };
 
     const handleToggle = async (taskId) => {
@@ -120,7 +121,6 @@ const TaskList = () => {
 
         try {
             const response = await axios.post(
-                // `http://127.0.0.1:8000/generate-random-task/${user.id}`
                 `https://harborhackers.onrender.com/generate-random-task/${user.id}`
             );
             console.log('Random task generated:', response.data);
