@@ -67,7 +67,7 @@ const Milestones = ( {userPoints}) => {
         >
             <Text fontSize="xl" fontWeight="bold" mb={4}>Rewards Progress</Text>
             {/* <Text fontSize="lg" mb={2}>Total Points: {userPoints}</Text> */}
-            <HStack spacing={4} width="100%" mt={4} alignItems="center">
+            <HStack spacing={4} width="100%" mt={4} alignItems="center" overflow="scroll">
                 {milestones.map((milestone, index) => {
                     const isAchieved = userPoints >= milestone.threshold;
 

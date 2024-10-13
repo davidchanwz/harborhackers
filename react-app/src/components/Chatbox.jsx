@@ -29,7 +29,6 @@ function ChatbotPage() {
     const [isTyping, setIsTyping] = useState(false);
     const [assistant, setAssistant] = useState(null); // State to hold the assistant
     const [assistantName, setAssistantName] = useState(""); // State for assistant's name
-    const messageEndRef = useRef(null); // Create a ref for auto-scroll
 
     useEffect(() => {
         const fetchAssistant = async () => {
@@ -47,12 +46,7 @@ function ChatbotPage() {
         fetchAssistant();
     }, []);
 
-    // Auto-scroll to the bottom when messages update
-    useEffect(() => {
-        if (messageEndRef.current) {
-            messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [messages]);
+    const chatContainerRef = useRef(null); // Create a ref for auto-scroll
 
     const handleSend = async (message) => {
         const newMessage = {
@@ -65,6 +59,8 @@ function ChatbotPage() {
         setIsTyping(true);
         await processMessageToChatGPT(newMessages);
     };
+
+
 
     async function processMessageToChatGPT(chatMessages) {
         const apiMessages = chatMessages.map((messageObject) => {
@@ -123,39 +119,47 @@ function ChatbotPage() {
         }
     }
 
-    return (
-        <div className="chat-container">
+    // Scroll to bottom when messages are updated
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
 
-            <MainContainer style={{ minHeight: '86vh' }}>
-                <ChatContainer style={{ height: '85vh', overflowY: 'auto' }}>
-                    <div className="assistant-name">
-                        Assistant Name: {assistantName}
-                    </div>
-                    <MessageList
-                        className="message-list"
-                        scrollBehavior="smooth"
-                        typingIndicator={isTyping ? <TypingIndicator content="PortPal is typing..." className="typing-indicator" /> : null}
-                    >
-                        {messages.map((message, i) => (
-                            <Message
-                                key={i}
-                                className={`message ${message.sender === "user" ? "outgoing" : "incoming"}`}
-                                model={{
-                                    message: message.message,
-                                    sentTime: "just now",
-                                    sender: message.sender,
-                                    direction: message.sender === "user" ? "outgoing" : "incoming",
-                                    position: message.sender === "user" ? "right" : "left"
-                                }}
-                            />
-                        ))}
-                        {/* This is the ref to ensure auto-scroll */}
-                        <div ref={messageEndRef} />
-                    </MessageList>
-                    <MessageInput className="message-input" placeholder="Type your message here" onSend={handleSend} />
-                </ChatContainer>
-            </MainContainer>
-        </div>
+    return (
+        <div className="chat-container" >
+
+                <MainContainer style={{ minHeight: '85vh' }}>
+                    <ChatContainer >
+                        <div className="assistant-name">
+                            Assistant Name: {assistantName}
+                        </div>
+                        <MessageList
+                            className="message-list"
+                            scrollBehavior="auto"
+                            typingIndicator={isTyping ? <TypingIndicator content="PortPal is typing..." className="typing-indicator" /> : null}
+                            style={{ height: '80vh'}}
+                            autoScrollToBottom={true} // This prop will auto-scroll to the bottom
+                        >
+                            {messages.map((message, i) => (
+                                <Message
+                                    key={i}
+                                    className={`message ${message.sender === "user" ? "outgoing" : "incoming"}`}
+                                    model={{
+                                        message: message.message,
+                                        sentTime: "just now",
+                                        sender: message.sender,
+                                        direction: message.sender === "user" ? "outgoing" : "incoming",
+                                        position: message.sender === "user" ? "right" : "left"
+                                    }}
+                                />
+                            ))}
+
+                        </MessageList>
+                        <MessageInput className="message-input" placeholder="Type your message here" onSend={handleSend} />
+                    </ChatContainer>
+                </MainContainer>
+            </div >
     );
 
 }
