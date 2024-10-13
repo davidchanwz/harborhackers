@@ -9,7 +9,6 @@ import DockWorks from './pages/DockWorks';
 import Settings from './pages/Settings';
 import User from './pages/User';
 import Metrics from './pages/Metrics';
-import Milestones from './pages/Milestones'
 import { AuthProvider } from './context/AuthContext'
 import TaskList from './components/TaskList';
 function App() {
@@ -29,7 +28,6 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/user" element={<User />} />
             <Route path="/metrics" element={<Metrics />} />
-            <Route path="/milestones" element={<Milestones userPoints={userPoints} />} />
           </Routes>
         </Sidebar>
       </AuthProvider>

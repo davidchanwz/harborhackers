@@ -1,12 +1,32 @@
 // src/pages/Page3.jsx
 import React from 'react';
-import { Box, Heading, Text } from '@chakra-ui/react';
+import { Box, Heading, Text, Alert, AlertIcon, AlertTitle, AlertDescription } from '@chakra-ui/react';
+import { useAuth } from '../context/AuthContext'; // Import the AuthContext to get the logged-in user
+import CourseList from '../components/CourseList'; // Adjust the import path if necessary
 
 function Compass() {
+    const { user, loading } = useAuth(); // Get the logged-in user from the AuthContext
+    if (!user) {
+        // Display a warning alert if the user is not logged in
+        return (
+            <Box p={8}>
+                <Alert status="warning">
+                    <AlertIcon />
+                    <Box flex="1">
+                        <AlertTitle>Login Required</AlertTitle>
+                        <AlertDescription>
+                            You need to log in to view Compass.
+                        </AlertDescription>
+                    </Box>
+                </Alert>
+            </Box>
+        );
+    }
     return (
         <Box p={8}>
             <Heading>Compass</Heading>
-            <Text mt={4}>This is the content for Compass.</Text>
+            <CourseList />
+
         </Box>
     );
 }

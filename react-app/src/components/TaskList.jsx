@@ -159,22 +159,22 @@ const TaskList = ({setUserPoints}) => {
             </Box>
         );
     }
-    if (!user) {
-        // Display a warning alert if the user is not logged in
-        return (
-            <Box p={8}>
-                <Alert status="warning">
-                    <AlertIcon />
-                    <Box flex="1">
-                        <AlertTitle>Login Required</AlertTitle>
-                        <AlertDescription>
-                            You need to log in to view your tasks.
-                        </AlertDescription>
-                    </Box>
-                </Alert>
-            </Box>
-        );
-    }
+    // if (!user) {
+    //     // Display a warning alert if the user is not logged in
+    //     return (
+    //         <Box p={8}>
+    //             <Alert status="warning">
+    //                 <AlertIcon />
+    //                 <Box flex="1">
+    //                     <AlertTitle>Login Required</AlertTitle>
+    //                     <AlertDescription>
+    //                         You need to log in to view your tasks.
+    //                     </AlertDescription>
+    //                 </Box>
+    //             </Alert>
+    //         </Box>
+    //     );
+    // }
     return (
         <Box p={8}>
             {/* Display alert after task generation */}

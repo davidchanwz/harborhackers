@@ -60,15 +60,14 @@ const Milestones = () => {
             border="1px solid"
             borderColor="gray.300"
             borderRadius="md"
-            height="100vh" // Fill the full height of the viewport
             display="flex"
             flexDirection="column"
             justifyContent="center"
             alignItems="center"
             backgroundColor="gray.50" // Light background color
         >
-            <Text fontSize="2xl" fontWeight="bold" mb={4}>Rewards Progress</Text>
-            <Text fontSize="lg" mb={2}>Total Points: {userPoints}</Text>
+            <Text fontSize="xl" fontWeight="bold" mb={4}>Rewards Progress</Text>
+            {/* <Text fontSize="lg" mb={2}>Total Points: {userPoints}</Text> */}
             <HStack spacing={4} width="100%" mt={4} alignItems="center">
                 {milestones.map((milestone, index) => {
                     const isAchieved = userPoints >= milestone.threshold;
@@ -108,14 +107,14 @@ const Milestones = () => {
                     );
                 })}
             </HStack>
-            <VStack spacing={2} mt={4} align="start">
+            {/* <VStack spacing={2} mt={4} align="start">
                 <Text fontWeight="bold" fontSize="lg">Milestone Achievements:</Text>
                 {milestones.map((milestone, index) => (
                     <Text key={index} color={userPoints >= milestone.threshold ? 'green.500' : 'gray.500'}>
                         {userPoints >= milestone.threshold ? `✓ ${milestone.reward} earned!` : `❏ ${milestone.reward}`}
                     </Text>
                 ))}
-            </VStack>
+            </VStack> */}
         </Box>
     );
 };

@@ -40,8 +40,6 @@ import Login from '../pages/Login';
 import { useAuth } from '../context/AuthContext'; // Import your AuthContext
 import { useNavigate } from 'react-router-dom'; // To handle navigation
 import Metrics from '../pages/Metrics';
-import Milestones from '../pages/Milestones';
-
 
 // Sidebar link items
 const LinkItems = [
@@ -49,8 +47,7 @@ const LinkItems = [
     { name: 'PortPal', icon: IoChatboxEllipses, path: '/portpal' },
     { name: 'Compass', icon: FiCompass, path: '/compass' },
     { name: 'DockWorks', icon: MdOutlineChecklist, path: '/dockworks' },
-    { name: 'Rewards', icon: FiStar, path: '/milestones'},
-    { name: 'Settings', icon: FiSettings, path: '/settings' },
+    // { name: 'Settings', icon: FiSettings, path: '/settings' },
     { name: 'Metrics', icon: FiBarChart2, path: '/metrics'},
 ];
 

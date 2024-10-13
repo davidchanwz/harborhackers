@@ -37,9 +37,11 @@ client = OpenAI(api_key=openai_api_key)
 
 supabase_client = supabase.create_client(supabase_url, supabase_key)
 
+class EmployeeSuggestedCourse(BaseModel):
+    employee_id: str
+    course_id: str
+    suggested_at: Optional[datetime] = None  # Timestamp of when the course was suggested
 # Define the Employee model
-
-
 class Employee(BaseModel):
     user_id: str
     full_name: str
@@ -49,8 +51,6 @@ class Employee(BaseModel):
     hobbies: str
 
 # Define the Task model
-
-
 class Task(BaseModel):
     task_id: Optional[str] = None
     user_id: str
@@ -101,7 +101,141 @@ class Task(BaseModel):
             due_by=cls.calculate_due_date(difficulty),
             created_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         )
+class Course(BaseModel):
+    title: str
+    provider: str
+    upcoming_date: Optional[str] = None
+    course_fee: Optional[str] = None
+    id: str  # assuming uuid is stored as a string
 
+# Fetch courses from Supabase
+def fetch_courses_from_supabase() -> List[Course]:
+    try:
+        # Fetch courses data from the 'courses' table
+        response = supabase_client.table("courses").select("*").execute()
+        
+        # Check for errors in the response
+        if response.error:
+            raise Exception(f"Error fetching courses: {response.error.message}")
+        
+        courses_data = response.data
+
+        # Map Supabase data to Course model directly
+        courses = [
+            Course(
+                title=course["Title"],
+                provider=course["Provider"],
+                upcoming_date=course.get("Upcoming Date", "NA"),
+                course_fee=course.get("Course Fee", "Not Provided"),
+                id=course["id"]  # Assigning course id
+            )
+            for course in courses_data
+        ]
+        return courses
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching courses from Supabase: {str(e)}"
+        )
+# Use OpenAI to generate suggested courses
+def generate_suggested_courses_with_openai(employee: Employee, courses: List[Course]) -> List[Course]:
+    course_list_str = "\n".join(
+        [f"- {course.title} by {course.provider}, Fee: {course.course_fee}, Date: {course.upcoming_date or 'NA'}"
+         for course in courses]
+    )
+
+    prompt = f"""
+    Suggest 3-5 suitable courses for the following employee based on their department, skills, and experience level:
+    
+    Employee:
+    - Name: {employee.full_name}
+    - Department: {employee.department}
+    - Experience Level: {employee.experience_level}
+    - Skills: {employee.skills}
+
+    Available Courses:
+    {course_list_str}
+
+    Please respond with a valid JSON list of recommended course IDs in this format:
+    [
+      {{"course_id": "<course_id>"}},
+      ...
+    ]
+    Only return the JSON output with no additional commentary.
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are an assistant generating course recommendations for employees."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=500,
+            temperature=0.7
+        )
+
+        raw_response = response.choices[0].message.content.strip()
+        print(f"OpenAI Response: {raw_response}")  # Debugging step
+
+        # Use regex to extract the JSON portion from the response
+        json_match = re.search(r"\[.*\]", raw_response, re.DOTALL)
+
+        if not json_match:
+            raise ValueError("JSON data not found in the response")
+
+        # Parse the extracted JSON portion
+        json_data = json.loads(json_match.group())
+        return json_data
+
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"Error parsing JSON from OpenAI: {e}")  # Debug print for errors
+        raise HTTPException(
+            status_code=500, detail=f"Error parsing JSON from OpenAI: {str(e)}"
+        )
+    except Exception as e:
+        print(f"General error: {e}")  # Debug print for general errors
+        raise HTTPException(
+            status_code=500, detail=f"Error generating suggestions with OpenAI: {str(e)}"
+        )
+
+# Insert the suggested courses into the employee_suggested_courses relational table
+def insert_suggested_courses(employee_id: str, course_ids: List[str]):
+    try:
+        # Prepare the data for bulk insertion
+        records = [{"employee_id": employee_id, "course_id": course_id} for course_id in course_ids]
+
+        response = supabase_client.table("employee_suggested_courses").insert(records).execute()
+
+        if response.error:
+            print(f"Error inserting suggested courses for employee {employee_id}: {response.error}")
+        else:
+            print(f"Suggested courses inserted for employee {employee_id}")
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error inserting suggested courses into relational table: {str(e)}"
+        )
+    
+# Endpoint to generate and update suggested courses for all employees
+@app.post("/generate-suggested-courses")
+def generate_and_update_suggested_courses():
+    try:
+        # Fetch employees and courses from Supabase
+        employees = fetch_employees_from_supabase()
+        courses = fetch_courses_from_supabase()
+
+        # Loop through each employee and generate suggested courses
+        for employee in employees:
+            suggested_courses = generate_suggested_courses_with_openai(employee, courses)
+            course_ids = [course["course_id"] for course in suggested_courses]  # Extract course IDs
+            insert_suggested_courses(employee.user_id, course_ids)  # Insert into relational table
+
+        return {"message": "Suggested courses generated and updated for all employees."}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error generating suggested courses: {str(e)}"
+        )
 
 # Function to fetch employees from Supabase
 def fetch_employees_from_supabase() -> List[Employee]:

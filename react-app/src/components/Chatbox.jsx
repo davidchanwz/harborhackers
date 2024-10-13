@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import './Chatbox.css';
 import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 import {
@@ -22,13 +22,14 @@ const systemMessage = {
 function ChatbotPage() {
     const [messages, setMessages] = useState([
         {
-            message: "Hello, I'm HarborBot, your friendly assistant! What would you like to know!",
+            message: "Hello, I'm PortPal, your friendly assistant! What would you like to know!",
             sender: "ChatGPT"
         }
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const [assistant, setAssistant] = useState(null); // State to hold the assistant
     const [assistantName, setAssistantName] = useState(""); // State for assistant's name
+    const messageEndRef = useRef(null); // Create a ref for auto-scroll
 
     useEffect(() => {
         const fetchAssistant = async () => {
@@ -45,6 +46,13 @@ function ChatbotPage() {
         };
         fetchAssistant();
     }, []);
+
+    // Auto-scroll to the bottom when messages update
+    useEffect(() => {
+        if (messageEndRef.current) {
+            messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages]);
 
     const handleSend = async (message) => {
         const newMessage = {
@@ -118,19 +126,19 @@ function ChatbotPage() {
     return (
         <div className="chat-container">
 
-            <MainContainer>
-                <ChatContainer>
+            <MainContainer style={{ minHeight: '86vh' }}>
+                <ChatContainer style={{ height: '85vh', overflowY: 'auto' }}>
                     <div className="assistant-name">
                         Assistant Name: {assistantName}
                     </div>
-                    <MessageList 
+                    <MessageList
                         className="message-list"
                         scrollBehavior="smooth"
-                        typingIndicator={isTyping ? <TypingIndicator content="ChatGPT is typing..." className="typing-indicator" /> : null}
+                        typingIndicator={isTyping ? <TypingIndicator content="PortPal is typing..." className="typing-indicator" /> : null}
                     >
                         {messages.map((message, i) => (
-                            <Message 
-                                key={i} 
+                            <Message
+                                key={i}
                                 className={`message ${message.sender === "user" ? "outgoing" : "incoming"}`}
                                 model={{
                                     message: message.message,
@@ -138,16 +146,18 @@ function ChatbotPage() {
                                     sender: message.sender,
                                     direction: message.sender === "user" ? "outgoing" : "incoming",
                                     position: message.sender === "user" ? "right" : "left"
-                                }} 
+                                }}
                             />
                         ))}
+                        {/* This is the ref to ensure auto-scroll */}
+                        <div ref={messageEndRef} />
                     </MessageList>
                     <MessageInput className="message-input" placeholder="Type your message here" onSend={handleSend} />
                 </ChatContainer>
             </MainContainer>
         </div>
     );
-    
+
 }
 
 export default ChatbotPage;

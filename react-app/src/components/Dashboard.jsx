@@ -170,7 +170,7 @@ const Dashboard = () => {
 
     return (
         <Box p={8}>
-            <Heading mb={4}>Employee Engagement Dashboard</Heading>
+            <Heading fontSize='2xl' mb={4}>Employee Engagement Dashboard</Heading>
 
             {/* Completion Rate Pie Chart */}
             <Box width="30%" marginBottom={6} padding={2} bg={'gray.200'} borderWidth='1px' borderRadius='lg'>
