@@ -38,7 +38,7 @@ import Favourites from '../pages/DockWorks';
 import Settings from '../pages/Settings';
 import Login from '../pages/Login';
 import { useAuth } from '../context/AuthContext'; // Import your AuthContext
-import { useNavigate } from 'react-router-dom'; // To handle navigation
+import { useNavigate, useLocation } from 'react-router-dom'; // To handle navigation
 import Metrics from '../pages/Metrics';
 
 // Sidebar link items
@@ -129,6 +129,8 @@ const SidebarContent = ({ onClose, ...rest }) => {
 };
 
 const NavItem = ({ icon, children, path, ...rest }) => {
+    const location = useLocation();
+    const isActive = location.pathname === path;
     return (
         <Link to={path} style={{ textDecoration: 'none' }}>
             <Flex
@@ -138,6 +140,8 @@ const NavItem = ({ icon, children, path, ...rest }) => {
                 borderRadius="lg"
                 role="group"
                 cursor="pointer"
+                bg={isActive ? 'cyan.800' : 'transparent'}  // Apply a different background if active
+                color={isActive ? 'white' : 'inherit'}
                 _hover={{
                     bg: 'cyan.400',
                     color: 'white',
