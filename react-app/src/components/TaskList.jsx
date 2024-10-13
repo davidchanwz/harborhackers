@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Heading, Text, useColorModeValue, ScaleFade, Spinner, Alert, AlertIcon, AlertTitle, AlertDescription} from '@chakra-ui/react';
+import { Box, Button, Heading, Text, useColorModeValue, ScaleFade, Spinner, Alert, AlertIcon, AlertTitle, AlertDescription } from '@chakra-ui/react';
 import TaskCard from './TaskCard';
 import { supabase } from '../supabaseClient';
 import { useSpring, animated } from '@react-spring/web'; // Import for animations
 import { useAuth } from '../context/AuthContext'; // Import the AuthContext to get the logged-in user
-
+import axios from 'axios';
 
 const TaskList = () => {
     const [tasks, setTasks] = useState([]);
     const [totalPoints, setTotalPoints] = useState(0);
-    const { user,loading } = useAuth(); // Get the logged-in user from the AuthContext
-
+    const { user, loading } = useAuth(); // Get the logged-in user from the AuthContext
+    const [isLoading, setIsLoading] = useState(false);  // Track loading state for button
+    const [showAlert, setShowAlert] = useState(false);  // Track if the alert should be shown
     // Animation state for total points
     const props = useSpring({ number: totalPoints, from: { number: 0 } });
 
@@ -112,9 +113,38 @@ const TaskList = () => {
         }
     };
 
+    // Generate a random task for the logged-in user
+    const generateRandomTask = async () => {
+        if (!user) return;
+        setIsLoading(true);  // Set loading to true when request starts
+
+        try {
+            const response = await axios.post(
+                `http://127.0.0.1:8000/generate-random-task/${user.id}`
+            );
+            console.log('Random task generated:', response.data);
+            // Refetch tasks after generating a new one
+            const fetchedTasks = await fetchTasks();
+            setTasks(fetchedTasks);
+            calculateTotalPoints(fetchedTasks);
+            setShowAlert(true);  // Show the success alert
+            // Set a timeout to hide the alert after 3 seconds
+            setTimeout(() => {
+                setShowAlert(false);
+            }, 3000);  // Adjust the duration as needed (3000 ms = 3 seconds
+        } catch (error) {
+            console.error('Error generating random task:', error);
+        } finally {
+            setIsLoading(false);  // Set loading to false once the request completes
+
+        }
+    };
+
     // Split tasks into completed and uncompleted
-    const completedTasks = tasks.filter(task => task.completed);
-    const uncompletedTasks = tasks.filter(task => !task.completed);
+    const sortedTasks = tasks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const completedTasks = sortedTasks.filter(task => task.completed);
+    const uncompletedTasks = sortedTasks.filter(task => !task.completed);
 
     // Chakra UI dynamic color based on theme mode
     const pointsColor = useColorModeValue('blue.500', 'yellow.300'); // Use dynamic color for total points
@@ -146,6 +176,13 @@ const TaskList = () => {
     }
     return (
         <Box p={8}>
+            {/* Display alert after task generation */}
+            {showAlert && (
+                <Alert status="success" mb={4}>
+                    <AlertIcon />
+                    Task successfully generated!
+                </Alert>
+            )}
 
             {/* Animated Total Points */}
             <ScaleFade initialScale={0.9} in={true}>
@@ -156,12 +193,21 @@ const TaskList = () => {
                     </animated.span>
                 </Text>
             </ScaleFade>
+            {/* Generate Random Task Button */}
+            <Button
+                colorScheme="teal"
+                mb={4}
+                onClick={generateRandomTask}
+                isLoading={isLoading}  // Show loading spinner while generating task
+            >
+                Generate New Task
+            </Button>
 
-            <Heading size="md" mb={2}>Uncompleted Tasks</Heading>
+            <Heading size="md" mb={2}>Uncompleted Tasks ({uncompletedTasks.length})</Heading>
             {uncompletedTasks.map((task) => (
                 <TaskCard key={task.task_id} task={task} onToggle={handleToggle} />
             ))}
-            <Heading size="md" mb={2} mt={6}>Completed Tasks</Heading>
+            <Heading size="md" mb={2} mt={6}>Completed Tasks ({completedTasks.length})</Heading>
             {completedTasks.map((task) => (
                 <TaskCard key={task.task_id} task={task} onToggle={handleToggle} />
             ))}
