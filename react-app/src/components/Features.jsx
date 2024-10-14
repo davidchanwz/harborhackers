@@ -93,7 +93,7 @@ export default function Features() {
                     />
                     <Card
                         heading={'Compass'}
-                        icon={<Icon as={FiCompass} fill='black' w={10} h={10} />}
+                        icon={<Icon as={FiCompass} color='black' w={10} h={10} />}
                         description={'Navigate your future career.'}
                         href={'/compass'}
                     />
