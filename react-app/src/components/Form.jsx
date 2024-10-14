@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Box, Button, FormControl, FormLabel, Input, Stack, Textarea, Select } from '@chakra-ui/react'
 import { useAuth } from '../context/AuthContext'
+import axios from 'axios';
+import { update } from '@react-spring/web';
 
 export default function EmployeeForm() {
     const { user } = useAuth() // Assuming you already have AuthContext to get the logged-in user
@@ -38,6 +40,21 @@ export default function EmployeeForm() {
 
         fetchEmployeeData()
     }, [user])
+
+    // update course for the logged-in user
+    const updateCourse = async () => {
+
+        try {
+            const response = await axios.post(
+                `https://harborhackers.onrender.com/generate-course-for/${user.id}`
+            );
+            console.log('Courses updated');
+            // Refetch tasks after generating a new one
+
+        } catch (error) {
+            console.error('Error generating random task:', error);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -89,6 +106,7 @@ export default function EmployeeForm() {
                 setIsExistingEmployee(true) // Mark the user as an existing employee after insert
             }
         }
+        updateCourse();
     }
 
     return (
