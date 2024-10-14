@@ -175,8 +175,15 @@ def generate_suggested_courses_with_openai(employee: Employee, courses: List[Cou
       ...
     ]
     For example:
-    "[\"Rapid Embedded Systems Design and Programming by NANYANG POLYTECHNIC\", \"Diploma in Engineering (Marine) (DEMOT) by NGEE ANN POLYTECHNIC\", \"Diploma in Marine Engineering by SINGAPORE POLYTECHNIC\", \"Diploma in Offshore & Sustainable Engineering by NGEE ANN POLYTECHNIC\", \"Diploma (Conversion) in Maritime Business Management by SINGAPORE POLYTECHNIC\"]"
-    Only return the JSON output with no additional commentary.
+[
+  {"course_id": "Rapid Embedded Systems Design and Programming by NANYANG POLYTECHNIC"},
+  {"course_id": "Diploma in Engineering (Marine) (DEMOT) by NGEE ANN POLYTECHNIC"},
+  {"course_id": "Diploma in Marine Engineering by SINGAPORE POLYTECHNIC"},
+  {"course_id": "Diploma in Offshore & Sustainable Engineering by NGEE ANN POLYTECHNIC"},
+  {"course_id": "Diploma (Conversion) in Maritime Business Management by SINGAPORE POLYTECHNIC"}
+]    
+
+Only return the JSON output with no additional commentary.
     """
 
     try:
