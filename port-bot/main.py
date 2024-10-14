@@ -265,6 +265,35 @@ def generate_and_update_suggested_courses():
             status_code=500, detail=f"Error generating suggested courses: {str(e)}"
         )
 
+# Endpoint to generate and update suggested courses for a single employee
+@app.post("/generate-course-for/{employee_id}")
+def generate_and_update_suggested_courses_for_employee(employee_id: str):
+    try:
+        # Fetch the employee from Supabase using employee_id
+        employee = fetch_employee_by_id(employee_id)
+        
+        if not employee:
+            raise HTTPException(status_code=404, detail="Employee not found")
+
+        # Fetch available courses from Supabase
+        courses = fetch_courses_from_supabase()
+
+        # Generate suggested courses for the employee using OpenAI
+        suggested_courses = generate_suggested_courses_with_openai(employee, courses)
+        course_ids = [course["course_id"] for course in suggested_courses]  # Extract course IDs
+
+        # Insert the generated course suggestions into the employee_suggested_courses table
+        insert_suggested_courses(employee.user_id, course_ids)
+
+        return {
+            "message": f"Suggested courses generated and updated for employee {employee_id}.",
+            "suggested_courses": suggested_courses
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error generating suggested courses for employee {employee_id}: {str(e)}"
+        )
 
 # Function to fetch employees from Supabase
 
